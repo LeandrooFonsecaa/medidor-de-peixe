@@ -1,7 +1,6 @@
 import streamlit as st
-import cv2
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from streamlit_drawable_canvas import st_canvas
 
 st.set_page_config(page_title="Medidor de Peixe", layout="centered")
@@ -62,14 +61,15 @@ if uploaded_file:
             comprimento_cm = comprimento_px * escala
             st.success(f"📐 Comprimento estimado do peixe: {comprimento_cm:.2f} cm")
 
-            img_copy = image_np.copy()
-            cv2.line(img_copy, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 255), 2)
-            for i in range(1, len(pontos)):
-                cv2.line(img_copy, pontos[i - 1], pontos[i], (0, 0, 0), 2)
-            cv2.putText(img_copy, f"{comprimento_cm:.1f} cm", pontos[len(pontos)//2],
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+            # Desenha imagem com resultado
+            img_result = image.copy()
+            draw = ImageDraw.Draw(img_result)
+            draw.line([ref_line[0], ref_line[-1]], fill="yellow", width=3)
+            draw.line(pontos, fill="black", width=2)
+            meio = pontos[len(pontos)//2]
+            draw.text((meio[0]+10, meio[1]), f"{comprimento_cm:.1f} cm", fill="red")
 
-            st.image(img_copy, caption="Resultado com medição", use_column_width=True)
+            st.image(img_result, caption="Resultado com medição", use_column_width=True)
 
         except Exception as e:
             st.error("Erro ao processar os pontos. Tente novamente com marcações mais simples.")
